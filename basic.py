@@ -1,5 +1,3 @@
-import re
-
 
 class token:
     def __init__(self, type, value):
@@ -8,11 +6,30 @@ class token:
 
 
 def isMathOperators(c):
-    x = re.search("[+-/%^()*]", c)
-    if x:
+    arithmeticOperators = ["+", "-", "*", "/", "%", "^", "(", ")"]
+
+    if c in arithmeticOperators:
         return True
     else:
         return False
+    
+def getMathOperator(c):
+    if c == "+":
+        return "add_operator"
+    elif c == "-":
+        return "minus_operator"
+    elif c == "*":
+        return "mult_operator"
+    elif c == "/":
+        return "div_operator"
+    elif c == "%":
+        return "mod_operator"
+    elif c == "^":
+        return "exponent"
+    elif c == "(":
+        return "open_par"
+    elif c == ")":
+        return "close_par"
     
 def isKeyword(word):
     keywords = ["int", "float", "double", "str", "bool", "is"]
@@ -47,7 +64,7 @@ def lexer(linesOfCode):
             elif line[i] == "=":
                 tokens.append(token('equals', line[i]))
             elif isMathOperators(line[i]):
-                tokens.append(token('mathOperator', line[i]))
+                tokens.append(token(getMathOperator(line[i]), line[i]))
                 
             i = i + 1
         
