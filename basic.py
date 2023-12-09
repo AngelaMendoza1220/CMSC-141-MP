@@ -26,9 +26,9 @@ def lexer(linesOfCode):
 
     tokens = []
 
-    for line in linesOfCode:         # for every line in the code
+    for line in linesOfCode:  # for every line in the code
         i = 0
-        while i < len(line):
+        while i < len(line):  # for every character in the line
             identifier = ""
             number = ""
             if line[i].isdigit():
@@ -37,7 +37,7 @@ def lexer(linesOfCode):
                     i = i + 1
                 tokens.append(token('number', number)) 
             elif line[i].isalpha() or line[i] == "_":
-                while i < len(line) and line[i].isalpha() or line[i] == "_":
+                while i < len(line) and (line[i].isalpha() or line[i] == "_"):
                     identifier = identifier + line[i]
                     i = i + 1
                 if isKeyword(identifier):
@@ -48,14 +48,13 @@ def lexer(linesOfCode):
                 tokens.append(token('equals', line[i]))
             elif isMathOperators(line[i]):
                 tokens.append(token('mathOperator', line[i]))
-           
+                
             i = i + 1
-
+        
     return tokens
 
+#code = ['x is int = 1', 'x + y']
+#lex = lexer(code)       
 
-code = ["x is int = 1"]
-lex = lexer(code)       
-
-for obj in lex:
-    print(obj.type, obj.value, sep=' ')
+#for obj in lex:
+    #print(obj.type, obj.value, sep=' ')
