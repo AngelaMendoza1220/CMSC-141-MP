@@ -1,10 +1,14 @@
 from tkinter import *
+import basic
 
 # get the code from the text box
 def readTheCode():
     theCode = textbox.get("1.0", "end-1c") # gets the code from the textbox
     linesOfCode = theCode.split('\n')      # split the content into lines
-    print(linesOfCode)                     # prints it out to the console
+    
+    lex = basic.lexer(linesOfCode)         # calls the lexer function to analyze each line
+    for obj in lex:                        # display the type and their values
+        print(obj.type, obj.value, sep=' ')
 
 
 window = Tk() # creates a window
