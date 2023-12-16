@@ -1,8 +1,35 @@
+import re
+
 
 class token:
     def __init__(self, type, value):
         self.type = type
         self.value = value
+
+
+def isKeyword(word):
+    keywords = ["is", "int", "float", "double", "string", "boolean"]
+
+    if word in keywords:
+        return True
+    else:
+        return False
+    
+def isNumberValid(num):
+    pattern = r'^[+-]?\d+(\.\d+)?$'
+
+    if re.match(pattern, num):
+        return True
+    else:
+        return False
+    
+def isVariableNameValid(var):
+    pattern = r'^[a-zA-Z][a-zA-Z0-9_]*$'
+
+    if re.match(pattern, var):
+        return True
+    else:
+        return False
 
 
 def isMathOperators(c):
@@ -30,48 +57,46 @@ def getMathOperator(c):
         return "open_par"
     elif c == ")":
         return "close_par"
-    
-def isKeyword(word):
-    keywords = ["int", "float", "double", "str", "bool", "is"]
 
-    if word in keywords:
-        return True
-    else:
-        return False
 
 def lexer(linesOfCode):
 
     tokens = []
 
     for line in linesOfCode:  # for every line in the code
-        i = 0
-        while i < len(line):  # for every character in the line
-            identifier = ""
-            number = ""
-            if line[i].isdigit():
-                while i < len(line) and line[i].isdigit():
-                    number = number + line[i]
-                    i = i + 1
-                tokens.append(token('number', number)) 
-            elif line[i].isalpha() or line[i] == "_":
-                while i < len(line) and (line[i].isalpha() or line[i] == "_"):
-                    identifier = identifier + line[i]
-                    i = i + 1
-                if isKeyword(identifier):
-                    tokens.append(token('keyword', identifier))  
+        pos = 0
+        while pos < len(line):  # for every character in the line
+            temp = ""
+            if line[pos].isdigit(): # if the character is a digit, append all digits
+                while pos < len(line) and (line[pos].isdigit() or line[pos] == "."): 
+                    temp += line[pos]    
+                    pos += 1
+                if isNumberValid(temp):         # if the number is valid, add as a token
+                    tokens.append(token('number', temp)) 
+                else:                           # if number is invalid, print error
+                    print("The number " + temp + " is invalid")
+                    break
+            elif line[pos].isalpha() or line[pos] == "_":
+                while pos < len(line) and (line[pos].isalpha() or line[pos] == "_"):
+                    temp += line[pos]
+                    pos += 1
+                if isKeyword(temp):             # if the word is a keyword, add as a token
+                    tokens.append(token('keyword', temp))  
+                elif isVariableNameValid(temp): # if the word is a valid variable name, add as a token
+                    tokens.append(token('variable', temp))
                 else:
-                    tokens.append(token('variable', identifier))
-            elif line[i] == "=":
-                tokens.append(token('equals', line[i]))
-            elif isMathOperators(line[i]):
-                tokens.append(token(getMathOperator(line[i]), line[i]))
+                    print("Invalid syntax")
+                    break
+            elif line[pos] == "=":
+                tokens.append(token('equals', line[pos]))
+                pos += 1
+            elif isMathOperators(line[pos]):
+                tokens.append(token(getMathOperator(line[pos]), line[pos]))
+                pos += 1
+            elif line[pos] == " ":
+                pos += 1
+            else:
+                print("Invalid syntax")
+                break
                 
-            i = i + 1
-        
     return tokens
-
-#code = ['x is int = 1', 'x + y']
-#lex = lexer(code)       
-
-#for obj in lex:
-    #print(obj.type, obj.value, sep=' ')
