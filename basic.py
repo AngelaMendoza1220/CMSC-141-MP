@@ -1,16 +1,37 @@
 import re
 
 
-class token:
+class Token:
     def __init__(self, type, value):
         self.type = type
         self.value = value
 
 
 def isKeyword(word):
-    keywords = ["is", "int", "float", "double", "string", "boolean"]
+    keywords = ["is", "int", "float", "string", "boolean", "char", "print"]
 
     if word in keywords:
+        return True
+    else:
+        return False
+    
+def isBoolean(word):
+    keywords = ["TRUE", "FALSE"]
+
+    if word in keywords:
+        return True
+    else:
+        return False
+    
+def isCharacter(c):
+    if len(c) == 3 and c[0] == "'" and c[1].isalpha() and c[2] == "'":
+        return True
+    else:
+        return False
+    
+def isString(word):
+
+    if word[0] == "\"" and word[len(word)-1] == "\"":
         return True
     else:
         return False
@@ -58,6 +79,11 @@ def getMathOperator(c):
     elif c == ")":
         return "close_par"
 
+def getNumericalDatatype(num):
+    if isinstance(eval(num), int):
+        return "int"
+    else:
+        return "float"
 
 def lexer(linesOfCode):
 
@@ -67,34 +93,51 @@ def lexer(linesOfCode):
         pos = 0
         while pos < len(line):  # for every character in the line
             temp = ""
-            if line[pos].isdigit(): # if the character is a digit, append all digits
+            if line[pos].isdigit():                       # if the character is a digit, append all digits
                 while pos < len(line) and (line[pos].isdigit() or line[pos] == "."): 
                     temp += line[pos]    
                     pos += 1
-                if isNumberValid(temp):         # if the number is valid, add as a token
-                    tokens.append(token('number', temp)) 
-                else:                           # if number is invalid, print error
+                if isNumberValid(temp):                   # if the number is valid, add as a token
+                    tokens.append(Token(getNumericalDatatype(temp), temp)) 
+                else:                                     # if number is invalid, print error
                     print("The number " + temp + " is invalid")
                     break
             elif line[pos].isalpha() or line[pos] == "_":
                 while pos < len(line) and (line[pos].isalpha() or line[pos] == "_"):
                     temp += line[pos]
                     pos += 1
-                if isKeyword(temp):             # if the word is a keyword, add as a token
-                    tokens.append(token('keyword', temp))  
-                elif isVariableNameValid(temp): # if the word is a valid variable name, add as a token
-                    tokens.append(token('variable', temp))
+                if isKeyword(temp):                       # if the word is a keyword, add as a token
+                    tokens.append(Token('keyword', temp))  
+                elif isBoolean(temp):                     # if the word is boolean, add as a token
+                    tokens.append(Token('boolean', temp))
+                elif isVariableNameValid(temp):           # if the word is a valid variable name, add as a token
+                    tokens.append(Token('variable', temp))
+                else:
+                    print("Invalid syntax")
+                    break
+            elif line[pos] == "'" or line[pos] == "\"":
+                temp += line[pos]
+                pos += 1
+                while pos < len(line) and (line[pos] != "'" or line[pos] != "\""):
+                    temp += line[pos]
+                    pos += 1
+                if isCharacter(temp):                     # if the word is a character, add as token
+                    tokens.append(Token('char', temp[1]))
+                elif isString(temp):                      # if the word is a string, add as token
+                    tokens.append(Token('string', temp[1:-1]))  
                 else:
                     print("Invalid syntax")
                     break
             elif line[pos] == "=":
-                tokens.append(token('equals', line[pos]))
+                tokens.append(Token('equals', line[pos]))
                 pos += 1
             elif isMathOperators(line[pos]):
-                tokens.append(token(getMathOperator(line[pos]), line[pos]))
+                tokens.append(Token(getMathOperator(line[pos]), line[pos]))
                 pos += 1
-            elif line[pos] == " ":
+            elif line[pos] == " ":                        # move to the next position if space is encountered
                 pos += 1
+            elif line[pos] == "\n":
+                tokens.append(Token('newline', line[pos]))
             else:
                 print("Invalid syntax")
                 break
