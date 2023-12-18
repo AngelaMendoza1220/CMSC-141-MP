@@ -36,7 +36,7 @@ def isString(word):
     else:
         return False
     
-def isNumberValid(num):
+def isNumber(num):
     pattern = r'^[+-]?\d+(\.\d+)?$'
 
     if re.match(pattern, num):
@@ -44,7 +44,7 @@ def isNumberValid(num):
     else:
         return False
     
-def isVariableNameValid(var):
+def isVariableName(var):
     pattern = r'^[a-zA-Z][a-zA-Z0-9_]*$'
 
     if re.match(pattern, var):
@@ -97,12 +97,12 @@ def lexer(linesOfCode):
                 while pos < len(line) and (line[pos].isdigit() or line[pos] == "."): 
                     temp += line[pos]    
                     pos += 1
-                if isNumberValid(temp):                   # if the number is valid, add as a token
+                if isNumber(temp):                        # if the number is valid, add as a token
                     tokens.append(Token(getNumericalDatatype(temp), temp)) 
                 else:                                     # if number is invalid, print error
                     print("The number " + temp + " is invalid")
                     break
-            elif line[pos].isalpha() or line[pos] == "_":
+            elif line[pos].isalpha() or line[pos] == "_": 
                 while pos < len(line) and (line[pos].isalpha() or line[pos] == "_"):
                     temp += line[pos]
                     pos += 1
@@ -110,12 +110,12 @@ def lexer(linesOfCode):
                     tokens.append(Token('keyword', temp))  
                 elif isBoolean(temp):                     # if the word is boolean, add as a token
                     tokens.append(Token('boolean', temp))
-                elif isVariableNameValid(temp):           # if the word is a valid variable name, add as a token
+                elif isVariableName(temp):                # if the word is a valid variable name, add as a token
                     tokens.append(Token('variable', temp))
                 else:
                     print("Invalid syntax")
                     break
-            elif line[pos] == "'" or line[pos] == "\"":
+            elif line[pos] == "'" or line[pos] == "\"":   # if a quotation mark is encountered, could be a char or string
                 temp += line[pos]
                 pos += 1
                 while pos < len(line) and (line[pos] != "'" or line[pos] != "\""):
@@ -128,10 +128,10 @@ def lexer(linesOfCode):
                 else:
                     print("Invalid syntax")
                     break
-            elif line[pos] == "=":
+            elif line[pos] == "=":                        # if =, append as token
                 tokens.append(Token('equals', line[pos]))
                 pos += 1
-            elif isMathOperators(line[pos]):
+            elif isMathOperators(line[pos]):              # if it is a math operator, determine the specific operator and add as token
                 tokens.append(Token(getMathOperator(line[pos]), line[pos]))
                 pos += 1
             elif line[pos] == " ":                        # move to the next position if space is encountered
