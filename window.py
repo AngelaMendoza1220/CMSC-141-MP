@@ -6,19 +6,20 @@ def readTheCode():
     theCode = codeEditor.get("1.0", "end-1c") # gets the code from the codeEditor
     linesOfCode = theCode.split('\n')         # split the content into lines
     
-    lex = basic.lexer(linesOfCode)            # calls the lexer function to analyze each line
-    printProgramResults(lex)
+    basic.reset_globals()
+    basic.evaluate_tokens(basic.lexer(linesOfCode), 0, 0) # calls the lexer function to analyze each line
+    printProgramResults(basic.printOut())                 # prints out what needs to be printed out
+    basic.clearPrintOut()                                 # clears the array that holds the values that need to be printed out
 
 
 def printProgramResults(results):
 
     console.configure(state='normal')         # set the textbox state to normal to be able to configure it
-    console.delete("1.0", END)                # clear the console of any text
+    console.delete(1.0, END)                  # clear the console of any text
 
     for obj in results:                       # display the type and their values
-        print(obj.type, obj.value, sep=' ')
-        console.insert(END,  obj.value + '\n')
-
+        console.insert(END,  str(obj) + '\n')
+    
     console.configure(state='disabled')       # disable textbox so that the contents of the console cannot be modified
 
 
