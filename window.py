@@ -1,16 +1,27 @@
 from tkinter import *
 import basic
+import evaluator
 
 
 def readTheCode():
+
     theCode = codeEditor.get("1.0", "end-1c") # gets the code from the codeEditor
     linesOfCode = theCode.split('\n')         # split the content into lines
     
-    basic.reset_globals()
-    basic.evaluate_tokens(basic.lexer(linesOfCode), 0, 0) # calls the lexer function to analyze each line
-    printProgramResults(basic.printOut())                 # prints out what needs to be printed out
-    basic.clearPrintOut()                                 # clears the array that holds the values that need to be printed out
+    results = basic.lexer(linesOfCode) #
+    for obj in results:  
+        for i in obj:
+            print(i.getType() + " " + i.getValue())
+    
+    eval = evaluator.evaluate_Tokens(results, 0 ,0 ,0) #
+    
+    for obj in eval:                                                            #
+        print(obj.getName() + " " + obj.getDatatype() + " " + obj.getValue())   #
+    
+    printProgramResults(evaluator.getPrintOut())
 
+    evaluator.clearVariables()
+    evaluator.clearPrintOut()
 
 def printProgramResults(results):
 
@@ -18,7 +29,7 @@ def printProgramResults(results):
     console.delete(1.0, END)                  # clear the console of any text
 
     for obj in results:                       # display the type and their values
-        console.insert(END,  str(obj) + '\n')
+        console.insert(END,  obj + '\n')
     
     console.configure(state='disabled')       # disable textbox so that the contents of the console cannot be modified
 
