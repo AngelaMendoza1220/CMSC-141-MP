@@ -1,8 +1,9 @@
 import basic
-
+import re
 
 __variables = []
 __printOut = []
+stop_print = False
 
 class Variable:
     def __init__(self, name, datatype, value):
@@ -170,7 +171,7 @@ def evaluate(expression):
 ################################ For Printing Variables and Strings ################################
     
 def printFunc(line, lineNumber):
-
+    print("TYPE IS" + line[1].getType())
     if len(line) > 1 and line[1].getType() == "open_par" and line[len(line)-1].getType() == "close_par":
 
         if line[2].getType() == "string":                       # if the value to be printed is a string surrounded by quotation marks: print("")
@@ -181,13 +182,22 @@ def printFunc(line, lineNumber):
                 appendToPrintOut(getVariable(var).getValue())         
             elif var == -1:                                     # if the variable does not exist, print the error
                 appendToPrintOut("Variable " + line[2].getValue() + " does not exist. Line: " + str(lineNumber))
+        elif line[2].getType() == 'char':
+            appendToPrintOut(line[2].getValue()) 
+        elif line[2].getType() == 'boolean':
+            appendToPrintOut(line[2].getValue()) 
         elif line[2].getType() == "close_par":                  # if there is no value to be printed: print()
-            return None
+           appendToPrintOut("Nothing to Print. Line: " + str(lineNumber))
         else:                                                           # if the value to be printed is a math expression: print(1+5) or print(i+5)
             appendToPrintOut(getResultOfMathExpr(line, 1, lineNumber))  # evaluate the math expression
-
+    
+    elif re.match(r'.*ERROR$', line[2].getType()):
+        appendToPrintOut("Error in Token. Line: " + str(lineNumber))
+    elif line[1].getType() != "open_par" or line[len(line)-1].getType() != "close_par":
+        appendToPrintOut("Missing Parentheses. Line: " + str(lineNumber))
     else:
-        appendToPrintOut("Error in print function. Line: " + str(lineNumber))
+         appendToPrintOut("Error in Print Function. Line: " + str(lineNumber))
+
     
 ################################ For Declaring Variables ################################
         
@@ -228,8 +238,10 @@ def variableDeclaration(line, lineNumber):
                     break
                 else:                                                                           # If the value is a single value or variable,
                     reAssignedVariablePosition = variableAlreadyExists(line[token].getValue())
-
-                    if basic.isDatatype(line[token].getType()):                                 # Check if the datatypes match, then save
+                    print("VAR DEC")   
+                    print(line[2].getValue())    
+                    print(line[4].getType()) 
+                    if basic.isDatatype(line[token].getType()):                       # Check if the datatypes match, then save
                         if line[2].getValue() == line[4].getType(): 
                             saveVariable(Variable(line[0].getValue(), line[2].getValue(), line[4].getValue()))
                             break
@@ -295,15 +307,19 @@ def variableReAssignment(line, lineNumber):
 
 ################################ For Conditional Statements ################################
                               
-def isIf(line, lineNumber):
-    condition = evaluate_condition(line, lineNumber)      
+def isIf(line, lineNumber, notindentedline):
+    condition = evaluate_condition(line, lineNumber, notindentedline)      
     return condition[0]
-
-def evaluate_condition(line, lineNumber):
+def is_float(input_str):
+    # Check if the string contains a period and all characters on both sides are numeric
+    if '.' in input_str and all(char.isdigit() or char == '.' for char in input_str):
+        return True
+    else:
+        return False
+def evaluate_condition(line, lineNumber, notindentedline):
     operand1 = None  #first operand of condition, can be a variable or a number
     operand2 = None  #second operand of condition, can be a variable or a number
     operator = None  #operator of condition, can be ==, !=, <, >, <=, >=
-    tokenholder = ""
     token = line[lineNumber]
     for index in range(lineNumber, len(line)):
         token = line[lineNumber]
@@ -314,17 +330,32 @@ def evaluate_condition(line, lineNumber):
         print("token value is" + str(token.getValue()))
         if token.getType() == 'variable':
                 varPos = variableAlreadyExists(token.getValue())
+                print("var pos is" + str(varPos))
                 if (varPos != -1):
-                    if operand1 is None:   
-                        operand1 = int(getVariable(varPos).getValue())
+                    if operand1 is None:  
+                        operand1 = str(getVariable(varPos).getValue())
+                        print("operand 1 is" + operand1)
+                        if is_float(operand1):                 
+                            operand1 = float(operand1)
+                        else:
+                            operand1 = int(operand1)
+
                     else:
-                        operand2 = int(getVariable(varPos).getValue())
+                        operand2 = str(getVariable(varPos).getValue())
+                        if is_float(operand2):
+                            operand2 = float(operand2)
+                        else:
+                            operand2 = int(operand2)
                         break     
+                else: 
+                    appendToPrintOut("Variable Does Not Exist. Line: " + str(notindentedline))
+                if nexttoken.getValue() != 'is':
+                    appendToPrintOut("Missing Is. Line: " + str(notindentedline))
         elif token.getType() == 'int':
             if operand1 is None:
-                operand1 = float(token.getValue())
+                operand1 = int(token.getValue())
             else:
-                operand2 = float(token.getValue())
+                operand2 = int(token.getValue())
                 break
         elif token.getType() == 'float':
             if operand1 is None:
@@ -332,29 +363,32 @@ def evaluate_condition(line, lineNumber):
             else:
                 operand2 = float(token.getValue())
                 break
-        elif token.getValue() == 'is' and nexttoken.getType() == 'equalto':
-            if nexttoken.getValue() == '==':
-                operator = nexttoken.getValue()
-        elif token.getValue() == 'is' and nexttoken.getType() == 'notequalto':
-            if nexttoken.getValue() == '!=':
-                operator = nexttoken.getValue()
-        elif token.getValue() == 'is' and nexttoken.getType() == 'lessthan':
-            if nexttoken.getValue() == '<':
-                operator = nexttoken.getValue()
-        elif token.getValue() == 'is' and nexttoken.getType() == 'lessthanorequalto':
-            if nexttoken.getValue() == '<=':
-                operator = nexttoken.getValue()
-        elif token.getValue() == 'is' and nexttoken.getType() == 'greaterthan':
-            if nexttoken.getValue() == '>':
-                operator = nexttoken.getValue()
-        elif token.getValue() == 'is' and nexttoken.getType() == 'greaterthanorequalto':
-            if nexttoken.getValue() == '>=':
-                operator = nexttoken.getValue()
+        elif token.getValue() == 'is':
+            if nexttoken.getType() == 'equalto':
+                if nexttoken.getValue() == '==':
+                    operator = nexttoken.getValue()
+            elif nexttoken.getType() == 'notequalto':
+                if nexttoken.getValue() == '!=':
+                    operator = nexttoken.getValue()
+            elif nexttoken.getType() == 'lessthan':
+                if nexttoken.getValue() == '<':
+                    operator = nexttoken.getValue()
+            elif nexttoken.getType() == 'lessthanorequalto':
+                if nexttoken.getValue() == '<=':
+                    operator = nexttoken.getValue()
+            elif nexttoken.getType() == 'greaterthan':
+                if nexttoken.getValue() == '>':
+                    operator = nexttoken.getValue()
+            elif nexttoken.getType() == 'greaterthanorequalto':
+                if nexttoken.getValue() == '>=':
+                    operator = nexttoken.getValue()
+            else: 
+                appendToPrintOut("Invalid Operator. Line: " + str(lineNumber))
         lineNumber += 1  
     # Evaluate the condition based on the operator
     if operator == '==':
-        print(operand1)
-        print(operand2)
+        print(type(operand1))
+        print(type(operand2))
         return [operand1 == operand2, index]
     elif operator == '!=':
         return [operand1 != operand2, index]
@@ -367,8 +401,8 @@ def evaluate_condition(line, lineNumber):
     elif operator == '<=':
         return [operand1 <= operand2, index]
     else:
-        # Handle other operators (>, <, !=, etc.) if needed
-        raise ValueError(f"Unsupported operator: {operator}")
+        appendToPrintOut("Invalid Operator. Line: " + str(lineNumber))
+        return [None, index]
     
 isindented = 0  #the evaluate_Tokens is split into two parts, one for indented blocks (no variable declaration or nested if/else), so
 #this is set to 1 upon block execution, and set back to zero upon end of block execution.
@@ -376,7 +410,9 @@ iholder = 0  #since evaluate_tokens is called from the start inside a block, thi
 #set to 0 on default, but set to whatever i value the called indentation block is located in
 skipline = 0  #to skip if execute block has multiple inputs, so if the indentation ends on line 9, upon end of if/elif/else, 
 # the code will loop until it is equal to that, since its last "i" value was before the indentation
-def evaluate_Tokens(tokens, isindented, iholder, skipline):    #isindented checks if its inside an else, where it will stop executing if the starting of the line is not indent                                          #line will make sure that inside the else, it starts executing on the indented line
+ #used to create an error if "if" does not exist before elif or else
+def evaluate_Tokens(tokens, isindented, iholder, skipline): 
+    ifexists = 0   #isindented checks if its inside an else, where it will stop executing if the starting of the line is not indent                                          #line will make sure that inside the else, it starts executing on the indented line
     condition = False                  #This helps execute the code block wherein the condition is true
     dontexecelse = 0     
     if isindented == 1:
@@ -390,6 +426,7 @@ def evaluate_Tokens(tokens, isindented, iholder, skipline):    #isindented check
                 if line[1].getValue() == 'print':
                     line.pop(0)
                     printFunc(line, i+1)
+                    
                 elif line[1].getType() == 'variable':
                     if line[2].getValue() == 'is' and lineLength >= 5:
                         line.pop(0)
@@ -414,35 +451,43 @@ def evaluate_Tokens(tokens, isindented, iholder, skipline):    #isindented check
         for i, line in enumerate(tokens):
             if i >= skipline:
                 skipline = 0
-                print("the current line is" + str(i+1))
+                print("the current line (not indent) is" + str(i+1))
                 lineLength = len(line)
                 if line[0].getValue() == 'print':
                     print("i am the pritn i go print print")
                     printFunc(line, i+1)
                 elif line[0].getValue() == 'if':
+                    ifexists = 1
+                    dontexecelse = 0
                     print("if gaming")
-                    conditionres = isIf(line, 1)
-                    print("condition is" + str(conditionres))
+                    conditionres = isIf(line, 1, i+1)
                     condition = conditionres
                     if condition == True:
                         print("if is true")
                         dontexecelse = 1     
                 elif line[0].getValue() == 'elif':
                     print("elif gaming")
-                    conditionres = isIf(line, 1)
-                    print("condition is" + str(conditionres))
+                    if ifexists == 0:
+                        print("no if here sir")
+                        appendToPrintOut("No If Located. Line: " + str(i+1))
+                    conditionres = isIf(line, 1, i+1)
                     condition = conditionres
                     if condition == True:
                         print("elif true")
                         dontexecelse = 1 
                 elif line[0].getValue() == 'else':
+                    if ifexists == 0:
+                        appendToPrintOut("No If Located. Line: " + str(i+1))
                     if dontexecelse == 0:
                         condition = True
                     else:
                         condition = False
                 elif line[0].getType() == 'indentation':
+                    print("INDENATATION")
                     if condition == True:
+                        print("when me")
                         skipline = evaluate_Tokens(tokens, 1, i, 0)        
+                        print("when me")
                     condition == False
                 elif line[0].getType() == 'variable':
                     if line[1].getValue() == 'is' and lineLength >= 5:
