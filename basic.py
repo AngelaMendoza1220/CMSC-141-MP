@@ -117,6 +117,8 @@ def getConditionalOperator(cc):
         return "lessthan"
     elif cc == "<=":
         return "lessthanorequalto"
+    else:
+        return None
 
 def getNumericalDatatype(num):
     if isinstance(eval(num), int):
@@ -198,7 +200,13 @@ def lexer(linesOfCode):
                 while pos < len(line) and isConditionalOperator(line[pos]):
                     temp += line[pos]
                     pos += 1
-                oneLineOfTokens.append(Token(getConditionalOperator(temp), temp))
+                res = getConditionalOperator(temp)
+                if res != None:
+                    oneLineOfTokens.append(Token(getConditionalOperator(temp), temp))
+                else:
+                    print("HELLLO")
+                    oneLineOfTokens.append(Token("CONDITIONAL_ERROR", temp))
+                    break
             elif re.match(r'^ {4}', line[pos:]):          # Match exactly four spaces at the beginning of the line
                 oneLineOfTokens.append(Token('indentation', '    '))
                 pos += 4
